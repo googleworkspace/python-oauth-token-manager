@@ -18,6 +18,7 @@ from typing import Any, List, Mapping, Optional, Type
 
 from google.cloud import secretmanager, secretmanager_v1
 from google.cloud.secretmanager_v1.types import resources
+from google.cloud.secretmanager_v1.services.secret_manager_service import pagers
 
 from . import decorators
 from .abstract_datastore import AbstractDatastore
@@ -60,7 +61,7 @@ class SecretManager(AbstractDatastore):
 
   @decorators.implicit_create(creator=create_secret)
   def store_document(self,  id: str, document: Mapping[str, Any],
-                     type: Optional[Type] = None) -> None:
+                     type: Optional[Type] = None) -> resources.SecretVersion:
     """Stores a document.
 
     Store a document in Secret Manager. This will, for credentials, always be
@@ -76,7 +77,7 @@ class SecretManager(AbstractDatastore):
     request = secretmanager_v1.AddSecretVersionRequest(
         parent=self.client.secret_path(self._project, id),
         payload=payload)
-    self.client.add_secret_version(request=request)
+    return self.client.add_secret_version(request=request)
 
   def update_document(self, id: str, new_data: Mapping[str, Any],
                       type: Optional[Type] = None) -> None:
@@ -85,12 +86,30 @@ class SecretManager(AbstractDatastore):
     Update a document in Secret Manager. If the document is not already there,
     it will be created as a net-new document. If it is, it will be updated.
 
+    As this is a specific 'update' request, remove any other enabled versions.
+
     Args:
         id (str): the id of the document.
         new_data (Dict[str, Any]): the document content.
         type (Optional[Type]): Unused.
     """
-    self.store_document(id=id, type=type, document=new_data)
+    new_version = self.store_document(id=id, type=type, document=new_data)
+
+    # Destroy other versions
+    request = secretmanager_v1.ListSecretVersionsRequest(
+        parent=self.client.secret_path(project=self._project, secret=id),
+        filter='state:enabled'
+    )
+    version_list = self.client.list_secret_versions(request=request)
+    for page in version_list.pages:
+      for version in page.versions:
+        if version == new_version:
+          continue
+        else:
+          self.client.destroy_secret_version(
+              secretmanager_v1.DestroySecretVersionRequest(
+                  name=version.name
+              ))
 
   def get_document(self, id: str, type: Optional[Type] = None,
                    key: Optional[str] = None) -> Mapping[str, Any]:
