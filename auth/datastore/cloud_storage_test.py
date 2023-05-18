@@ -16,7 +16,7 @@ import json
 import unittest
 from unittest import mock
 
-from . import gcs_datastore
+from . import cloud_storage
 
 from copy import deepcopy
 from typing import Any, Dict
@@ -35,7 +35,7 @@ MASTER_CONFIG = {
 CLASS_UNDER_TEST = 'auth.gcs_datastore'
 
 
-class GCSDatastoreTest(unittest.TestCase):
+class CloudStorageTest(unittest.TestCase):
   def setUp(self):
     self.open = mock.mock_open(read_data=json.dumps(MASTER_CONFIG))
     # mock.patch('gcsfs.GCSFileSystem', autospec=True).start()
@@ -45,7 +45,7 @@ class GCSDatastoreTest(unittest.TestCase):
     mock_filesystem.return_value.get.return_value = []
 
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       self.assertEqual({'api_key': 'api_key'},
                        datastore.get_document('auth', 'api_key'))
@@ -54,7 +54,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_get_document_without_key(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       self.assertEqual(MASTER_CONFIG,
                        datastore.get_document('auth'))
@@ -63,7 +63,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_get_document_missing_type(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       self.assertEqual(None, datastore.get_document('10011'))
 
@@ -71,7 +71,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_get_document_missing_id(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       self.assertEqual(None, datastore.get_document('10011'))
 
@@ -79,7 +79,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_get_document_missing_key(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       self.assertEqual(None, datastore.get_document('auth', 'foo'))
 
@@ -87,7 +87,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_store_new_document(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
       datastore.store_document(id='0000', document={'id': '0000'})
 
@@ -98,7 +98,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_store_new_document_new_name(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(
+      datastore = cloud_storage.CloudStorage(
           project='westley',
           bucket='buttercup',
           datastore_file='new_datastore.json')
@@ -111,7 +111,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_list_documents_all(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       _docs = datastore.list_documents()
@@ -122,7 +122,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_list_documents_auth(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       _docs = datastore.list_documents('auth')
@@ -133,7 +133,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_list_documents_none(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       _docs = datastore.list_documents('foo')
@@ -143,7 +143,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_get_all_documents(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       _docs = datastore.get_all_documents()
@@ -154,7 +154,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_delete_document_collection(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       datastore.delete_document(id='auth')
@@ -164,7 +164,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_delete_document_key(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       datastore.delete_document(
@@ -180,7 +180,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_delete_document_key_missing(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       datastore.delete_document(
@@ -192,7 +192,7 @@ class GCSDatastoreTest(unittest.TestCase):
   def test_update_document_existing(self, mock_filesystem):
     mock_filesystem.return_value.get.return_value = []
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = gcs_datastore.GCSDatastore(project='westley',
+      datastore = cloud_storage.CloudStorage(project='westley',
                                              bucket='buttercup')
 
       expected = {'api_key': 'new api key'}

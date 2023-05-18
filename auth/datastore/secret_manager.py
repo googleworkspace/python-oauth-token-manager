@@ -20,8 +20,8 @@ from google.cloud import secretmanager, secretmanager_v1
 from google.cloud.secretmanager_v1.types import resources
 from google.cloud.secretmanager_v1.services.secret_manager_service import pagers
 
-from . import decorators
-from .abstract_datastore import AbstractDatastore
+import decorators
+from abstract_datastore import AbstractDatastore
 
 
 class SecretManager(AbstractDatastore):

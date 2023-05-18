@@ -19,7 +19,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='python-oauth-token-manager',
-    version='0.1.3',
+    version='0.2.2',
     description='API for managing stored OAuth credentials.',
     long_description=long_description,
     long_description_content_type='text/markdown',

@@ -16,7 +16,7 @@ import json
 import unittest
 from unittest import mock
 
-from . import local_datastore
+from . import local_file
 
 from copy import deepcopy
 from typing import Any, Dict
@@ -35,40 +35,40 @@ MASTER_CONFIG = {
 CLASS_UNDER_TEST = 'auth.local_datastore'
 
 
-class LocalDatastoreTest(unittest.TestCase):
+class LocalFileTest(unittest.TestCase):
   def setUp(self):
     self.open = mock.mock_open(read_data=json.dumps(MASTER_CONFIG))
 
   def test_get_document_with_key(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       self.assertEqual({'api_key': 'api_key'},
                        datastore.get_document('auth', 'api_key'))
 
   def test_get_document_without_key(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       self.assertEqual(MASTER_CONFIG,
                        datastore.get_document('auth'))
 
   def test_get_document_missing_type(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       self.assertEqual(None, datastore.get_document('10011'))
 
   def test_get_document_missing_id(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       self.assertEqual(None, datastore.get_document('10011'))
 
   def test_get_document_missing_key(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       self.assertEqual(None, datastore.get_document('auth', 'foo'))
 
   def test_store_new_document(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
       datastore.store_document(id='0000', document={'id': '0000'})
 
       expected = deepcopy(MASTER_CONFIG)
@@ -78,7 +78,7 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_store_new_document_new_name(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore(
+      datastore = local_file.LocalFile(
           datastore_file='new_datastore.json')
       datastore.store_document(id='0000', document={'id': '0000'})
 
@@ -89,7 +89,7 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_list_documents_all(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       _docs = datastore.list_documents()
       expected = MASTER_CONFIG
@@ -97,7 +97,7 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_list_documents_auth(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       _docs = datastore.list_documents('auth')
       expected = MASTER_CONFIG.get('auth')
@@ -105,14 +105,14 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_list_documents_none(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       _docs = datastore.list_documents('foo')
       self.assertIsNone(_docs)
 
   def test_get_all_documents(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       _docs = datastore.get_all_documents()
       expected = MASTER_CONFIG
@@ -120,14 +120,14 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_delete_document_collection(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       datastore.delete_document(id='auth')
       self.assertEqual({}, datastore.datastore)
 
   def test_delete_document_key(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       datastore.delete_document(
           id='auth', key='api_key')
@@ -140,7 +140,7 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_delete_document_key_missing(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       datastore.delete_document(
           id='auth', key='foo')
@@ -149,7 +149,7 @@ class LocalDatastoreTest(unittest.TestCase):
 
   def test_update_document_existing(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      datastore = local_datastore.LocalDatastore()
+      datastore = local_file.LocalFile()
 
       expected = {'api_key': 'new api key'}
       datastore.update_document(id='auth',

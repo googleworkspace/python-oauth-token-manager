@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,77 +16,48 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Dict, List, Mapping, Optional
 
-import gcsfs
-
-from auth.local_datastore import LocalDatastore
-
-from . import decorators
-from .abstract_datastore import AbstractDatastore
+import decorators
+from abstract_datastore import AbstractDatastore
 
 
 def persist(f: Callable) -> Any:
-  """Persists the datastore after internal manipulations.
-
-  This is used to decorate functions that modify the internal json object
-  containing the authentication credentials and ensures that any changes
-  locally will be written back to the store automatically.
-
-  Args:
-      f (Callable): the source of the persist action
-
-  Returns:
-      Any: whatever the original function returns
-  """
   def f_persist(*args: Mapping[str, Any], **kw: Mapping[str, Any]) -> Any:
-    datastore = args[0]                 # 'self' in the original caller
+    datastore = args[0]
     try:
       return f(*args, **kw)
     finally:
-      fs = gcsfs.GCSFileSystem(project=datastore.project)
-      file_name = f'{datastore.bucket}/{datastore.datastore_file}'
-      with fs.open(file_name, 'w') as storage:
+      with open(datastore.datastore_file, 'w') as storage:
         storage.write(json.dumps(datastore.datastore, indent=2))
   return f_persist
 
 
-class GCSDatastore(LocalDatastore):
-  """A datastore for storing auth credentials in GCS.
-  """
+class LocalFile(AbstractDatastore):
   @decorators.lazy_property
   def datastore(self) -> Dict[str, Any]:
     try:
-      fs = gcsfs.GCSFileSystem(project=self.project)
-      file_name = f'{self.bucket}/{self.datastore_file}'
-      with open(file_name, 'r') as store:
+      with open(self.datastore_file, 'r') as store:
         if data := store.read():
           return json.loads(data)
         else:
           return {}
-
     except FileNotFoundError:
       return {}
-
-  def __init__(self,
-               project: str,
-               bucket: str,
-               email: str = None,
-               datastore_file: str = 'datastore.json') -> AbstractDatastore:
-    self._project = project
-    self._email = email
-    self._bucket = bucket
-    self._datastore_file = datastore_file
 
   @decorators.lazy_property
   def datastore_file(self) -> str:
     return self._datastore_file
 
-  @decorators.lazy_property
-  def bucket(self) -> str:
-    return self._bucket
+  @datastore_file.setter
+  def datastore_file(self, datastore_file: str) -> None:
+    self._datastore_file = datastore_file
 
-  @decorators.lazy_property
-  def project(self) -> str:
-    return self._project
+  def __init__(self,
+               email: str = None,
+               project: str = None,
+               datastore_file: str = 'datastore.json') -> AbstractDatastore:
+    self._project = project
+    self._email = email
+    self.datastore_file = datastore_file
 
   def get_document(self, id: str, key: Optional[str] = None) -> Dict[str, Any]:
     """Fetches a document (could be anything, 'type' identifies the root.)
@@ -133,7 +104,6 @@ class GCSDatastore(LocalDatastore):
         id (str): the id of the document within the collection.
         new_data (Dict[str, Any]): the document content.
     """
-    # super().update_document(id=id, new_data=new_data)
     if document := self.datastore.get(id):
       document.update(new_data)
 
