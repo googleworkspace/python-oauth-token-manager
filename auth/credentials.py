@@ -24,7 +24,7 @@ from google.auth.transport import requests
 from google.oauth2 import credentials as oauth
 
 from auth import decorators
-from auth.credentials_helpers import encode_key
+from .credentials_helpers import encode_key
 
 from .abstract_datastore import AbstractDatastore
 from .exceptions import CredentialsError

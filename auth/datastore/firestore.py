@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-import decorators
-from abstract_datastore import AbstractDatastore
+from auth import decorators
+from auth.abstract_datastore import AbstractDatastore
 
 from google.cloud import firestore
 

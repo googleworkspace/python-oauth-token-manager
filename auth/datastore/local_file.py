@@ -16,8 +16,8 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Dict, List, Mapping, Optional
 
-import decorators
-from abstract_datastore import AbstractDatastore
+from auth import decorators
+from auth.abstract_datastore import AbstractDatastore
 
 
 def persist(f: Callable) -> Any:

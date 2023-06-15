@@ -13,7 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
-from datastore import cloud_storage
-from datastore import firestore
-from datastore import local_file
-from datastore import secret_manager
+from auth.datastore import cloud_storage
+from auth.datastore import firestore
+from auth.datastore import local_file
+from auth.datastore import secret_manager

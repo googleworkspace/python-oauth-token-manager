@@ -17,11 +17,8 @@ import json
 from typing import Any, Callable, Dict, List, Mapping, Optional
 
 import gcsfs
-
-from auth.local_datastore import LocalDatastore
-
-import decorators
-from abstract_datastore import AbstractDatastore
+from auth import decorators
+from auth.abstract_datastore import AbstractDatastore
 
 
 def persist(f: Callable) -> Any:
@@ -49,7 +46,7 @@ def persist(f: Callable) -> Any:
   return f_persist
 
 
-class CloudStorage(LocalDatastore):
+class CloudStorage(AbstractDatastore):
   """A datastore for storing auth credentials in GCS.
   """
   @decorators.lazy_property
