@@ -15,8 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import json
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Mapping, Type, TypeVar, Union
 
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -24,9 +23,9 @@ from google.auth.transport import requests
 from google.oauth2 import credentials as oauth
 
 from auth import decorators
-from .credentials_helpers import encode_key
 
 from .abstract_datastore import AbstractDatastore
+from .credentials_helpers import encode_key
 from .exceptions import CredentialsError
 
 
@@ -34,7 +33,6 @@ from .exceptions import CredentialsError
 class ProjectCredentials(object):
   client_id: str
   client_secret: str
-
 
 
 class Credentials(object):
@@ -97,7 +95,7 @@ class Credentials(object):
     return self.datastore.get_document(id=encode_key(self._email))
 
   def store_credentials(self,
-                        creds: oauth.Credentials) -> None:
+                        creds: Union[oauth.Credentials, Mapping[str, Any]]) -> None:
     """Stores the credentials.
 
     This function uses the datastore to store the user credentials for later.
@@ -110,8 +108,11 @@ class Credentials(object):
     """
     if self._email:
       key = encode_key(self._email)
-      json_creds = json.loads(creds.to_json())
-      self.datastore.update_document(id=key, new_data=json_creds)
+
+      if isinstance(creds, oauth.Credentials):
+        self.datastore.update_document(id=key, new_data=creds.to_json())
+      else:
+        self.datastore.update_document(id=key, new_data=creds)
 
   def _refresh_credentials(self, creds: oauth.Credentials) -> None:
     """Refreshes the Google OAuth credentials.
@@ -139,18 +140,7 @@ class Credentials(object):
     expiry = self._to_utc(
         datetime.now().astimezone(pytz.utc) + relativedelta(minutes=30))
     if token := self.token_details:
-      if token.get('access_token'):
-        # This handles old-style credential storages.
-        creds = oauth.Credentials.from_authorized_user_info({
-            'token': token['access_token'],
-            'refresh_token': token['refresh_token'],
-            'client_id': self.project_credentials.client_id,
-            'client_secret': self.project_credentials.client_secret,
-        })
-
-      else:
-        creds = \
-            oauth.Credentials.from_authorized_user_info(token)
+      creds = oauth.Credentials.from_authorized_user_info(token)
 
       if creds.expired:
         creds.expiry = expiry
@@ -158,8 +148,7 @@ class Credentials(object):
 
     else:
       creds = None
-      raise CredentialsError(
-          message='credentials not found', email=self._email)
+      raise CredentialsError(message='credentials not found', email=self._email)
 
     return creds
 
