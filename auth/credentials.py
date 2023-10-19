@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import json
 from typing import Any, Dict, Mapping, Type, TypeVar, Union
 
 import pytz
@@ -140,7 +141,7 @@ class Credentials(object):
     expiry = self._to_utc(
         datetime.now().astimezone(pytz.utc) + relativedelta(minutes=30))
     if token := self.token_details:
-      creds = oauth.Credentials.from_authorized_user_info(token)
+      creds = oauth.Credentials.from_authorized_user_info(json.loads(token))
 
       if creds.expired:
         creds.expiry = expiry

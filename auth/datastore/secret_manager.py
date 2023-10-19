@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+from io import BytesIO
 
 import json
 from typing import Any, List, Mapping, Optional, Type
@@ -72,8 +73,10 @@ class SecretManager(AbstractDatastore):
         document (Dict[str, Any]): The document to store.
         type (Optional[Type]): Unused.
     """
+    b_document = BytesIO()
+    b_document.write(json.dumps(document).encode())
     payload = secretmanager_v1.SecretPayload(
-        data=json.dumps(document).encode('utf-8'))
+        data=b_document.getvalue())
     request = secretmanager_v1.AddSecretVersionRequest(
         parent=self.client.secret_path(self._project, id),
         payload=payload)
@@ -101,14 +104,13 @@ class SecretManager(AbstractDatastore):
     # Destroy other versions
     request = secretmanager_v1.ListSecretVersionsRequest(
         parent=self.client.secret_path(project=self._project, secret=id),
-        filter=f'state:enabled AND name!="{latest.name}"'
+        filter=f'state:enabled' # AND name!="{latest.name}"'
     )
     version_list = self.client.list_secret_versions(request=request)
     for page in version_list.pages:
       for version in page.versions:
-        if version == new_version:
-          continue
-        else:
+        # Only delete older versions
+        if version.create_time < new_version.create_time:
           self.client.destroy_secret_version(
               secretmanager_v1.DestroySecretVersionRequest(
                   name=version.name
@@ -153,7 +155,7 @@ class SecretManager(AbstractDatastore):
     try:
       request = secretmanager_v1.AccessSecretVersionRequest(name=secret)
       response = self.client.access_secret_version(request=request)
-      return json.loads(response.payload.data)
+      return json.loads(response.payload.data.decode('utf-8'))
     except Exception as e:
       print(e)
       return None
