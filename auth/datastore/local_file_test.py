@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@ import json
 import unittest
 from unittest import mock
 
-from . import local_file
+from auth import local_file
+from google.oauth2 import credentials as oauth
 
 from copy import deepcopy
 from typing import Any, Dict
@@ -32,7 +33,7 @@ MASTER_CONFIG = {
     },
 }
 
-CLASS_UNDER_TEST = 'auth.local_datastore'
+CLASS_UNDER_TEST = 'auth.local_file'
 
 
 class LocalFileTest(unittest.TestCase):
@@ -157,16 +158,3 @@ class LocalFileTest(unittest.TestCase):
       self.open().write.assert_called_once()
       self.assertEqual(expected.get('api_key'),
                        datastore.datastore.get('auth').get('api_key'))
-
-    # def test_update_document_new(self):
-    #   with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-    #     datastore=local_datastore.LocalDatastore()
-
-    #     expected={'new_api_key': 'new api key'}
-    #     datastore.update_document(id='auth',
-    #                               new_data=expected)
-    #     self.open().write.assert_called_once()
-    #     self.assertEqual('new api key',
-    #         datastore.datastore.get(
-    #     self.assertEqual('api_key',
-    #         datastore.datastore.get(

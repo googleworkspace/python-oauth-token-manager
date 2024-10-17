@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import base64
 
-from .exceptions import KeyEncodingError
+from auth.exceptions import KeyEncodingError
 
 
 def encode_key(key: str) -> str:
@@ -32,7 +32,7 @@ def encode_key(key: str) -> str:
   """
   try:
     if encoded_key := base64.b64encode(
-      key.encode('utf-8')).decode('utf-8').rstrip('='):
+            key.encode('utf-8')).decode('utf-8').rstrip('='):
       return encoded_key
 
   except:

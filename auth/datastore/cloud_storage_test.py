@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ import json
 import unittest
 from unittest import mock
 
-from . import cloud_storage
+from auth.datastore import cloud_storage
 
 from copy import deepcopy
 from typing import Any, Dict
@@ -32,7 +32,7 @@ MASTER_CONFIG = {
     },
 }
 
-CLASS_UNDER_TEST = 'auth.gcs_datastore'
+CLASS_UNDER_TEST = 'auth.cloud_storage'
 
 
 class CloudStorageTest(unittest.TestCase):

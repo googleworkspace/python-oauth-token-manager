@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,9 +54,16 @@ class SecretManager(AbstractDatastore):
     around a collection of secret versions. Secret versions hold the actual
     secret material.
     """
-    request = secretmanager_v1.CreateSecretRequest(parent=self.parent,
-                                                   secret_id=id)
-    response = self.client.create_secret(request=request)
+    try:
+      secret = secretmanager.Secret(replication=secretmanager.Replication(
+          automatic=secretmanager.Replication.Automatic()))
+      request = secretmanager_v1.CreateSecretRequest(parent=self.parent,
+                                                     secret_id=id,
+                                                     secret=secret)
+      response = self.client.create_secret(request=request)
+
+    except Exception as e:
+      print(e)
 
     return response
 
@@ -73,10 +80,8 @@ class SecretManager(AbstractDatastore):
         document (Dict[str, Any]): The document to store.
         type (Optional[Type]): Unused.
     """
-    b_document = BytesIO()
-    b_document.write(json.dumps(document).encode())
     payload = secretmanager_v1.SecretPayload(
-        data=b_document.getvalue())
+        data=bytes(json.dumps(document), 'utf-8'))
     request = secretmanager_v1.AddSecretVersionRequest(
         parent=self.client.secret_path(self._project, id),
         payload=payload)
@@ -101,10 +106,10 @@ class SecretManager(AbstractDatastore):
 
     latest = self._get_latest(id)
 
-    # Destroy other versions
+    # Destroy all versions other than the latest for cost reasons..
     request = secretmanager_v1.ListSecretVersionsRequest(
         parent=self.client.secret_path(project=self._project, secret=id),
-        filter=f'state:enabled' # AND name!="{latest.name}"'
+        filter=f'state:enabled'  # AND name!="{latest.name}"'
     )
     version_list = self.client.list_secret_versions(request=request)
     for page in version_list.pages:
@@ -155,7 +160,9 @@ class SecretManager(AbstractDatastore):
     try:
       request = secretmanager_v1.AccessSecretVersionRequest(name=secret)
       response = self.client.access_secret_version(request=request)
-      return json.loads(response.payload.data.decode('utf-8'))
+      document = json.loads(response.payload.data.decode('utf-8'))
+      return document
+
     except Exception as e:
       print(e)
       return None

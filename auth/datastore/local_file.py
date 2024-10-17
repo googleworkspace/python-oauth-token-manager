@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,17 @@ from auth.abstract_datastore import AbstractDatastore
 
 
 def persist(f: Callable) -> Any:
+  """Decorator to write the key/value pairs to the storage file.
+
+  This avoids code duplication of the `persist` behaviour, and if the
+  function is wrapped in the decorator, we can't forget to persist the map!
+
+  Args:
+      f (Callable): the function to wrap
+
+  Returns:
+      Any: the return value of `f`
+  """
   def f_persist(*args: Mapping[str, Any], **kw: Mapping[str, Any]) -> Any:
     datastore = args[0]
     try:
@@ -106,6 +117,8 @@ class LocalFile(AbstractDatastore):
     """
     if document := self.datastore.get(id):
       document.update(new_data)
+    else:
+      self.store_document(id, new_data)
 
   @persist
   def delete_document(self, id: str, key: Optional[str] = None) -> None:

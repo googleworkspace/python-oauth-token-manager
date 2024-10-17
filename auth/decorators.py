@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,19 @@ def lazy_property(f: Callable):
 
 
 def implicit_create(creator: Callable) -> Any:
+  """Decorator that will run a function if an item is not found.
+
+  Once the `creator` is run, the original function is run a second time,
+  ensuring that the prerequisite is now met. This is used in secret manager to
+  implicitly handle the extra actions necessary to create the first version of
+  a user's token in `SecretManager`.
+
+  Args:
+      creator (Callable): the function to execute
+
+  Returns:
+      Any: the result of the main function
+  """
   def the_real_decorator(f: Callable) -> Any:
     @wraps(f)
     def wrapper(*args, **kwargs) -> Any:
@@ -50,5 +63,3 @@ def implicit_create(creator: Callable) -> Any:
           ran_creator = True
     return wrapper
   return the_real_decorator
-
-
