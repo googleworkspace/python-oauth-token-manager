@@ -54,8 +54,7 @@ class Credentials(object):
   failures further down the line if an attempt is made to store or load
   credentials.
   """
-  _email: str = None
-  _project: str = None
+  _datastore: AbstractDatastore = None
 
   TDatastore = TypeVar('TDatastore', bound=AbstractDatastore)
 
@@ -64,9 +63,25 @@ class Credentials(object):
                email: str = None,
                project: str = None,
                **dsargs) -> Credentials:
-    self._email = email
-    self._project = project
+    self.email = email
+    self.project = project
     self._datastore = datastore(email=email, project=project, **dsargs)
+
+  @property
+  def email(self) -> str:
+    return self._email
+
+  @email.setter
+  def email(self, email: str) -> None:
+    self._email = email
+
+  @property
+  def project(self) -> str:
+    return self._project
+
+  @project.setter
+  def project(self, project: str) -> None:
+    self._project = project
 
   @property
   def datastore(self) -> AbstractDatastore:
@@ -193,7 +208,7 @@ class Credentials(object):
             'default_scopes': credentials.default_scopes,
             'expiry': credentials.expiry.strftime('%Y-%m-%dT%H:%M:%SZ')}
 
-  @ property
+  @property
   def credentials(self) -> oauth.Credentials:
     """Fetches the credentials.
 
@@ -219,7 +234,7 @@ class Credentials(object):
 
     return creds
 
-  @ property
+  @property
   def auth_headers(self) -> Dict[str, Any]:
     """Returns authorized http headers.
 

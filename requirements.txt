@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+absl-py>=0.12.0
 dataclasses-json>=0.5.2
 decorator>=4.4.2
 gcs-oauth2-boto-plugin>=2.7

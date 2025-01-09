@@ -36,7 +36,7 @@ to enable the API you need.
 ### Secret Manager
 
 Two secrets will need to be manually added to Secret Manager before the library
-can be used. These are the client id and client secret. The easiest way to do
+can be used. These are the client id and client secret. One way to do
 this is using a small shell script like this:
 
 ```
@@ -78,11 +78,18 @@ echo "{ \"client_id\": \"${CLIENT_SECRET}\" }" | gcloud --project ${PROJECT} sec
 The library will create any further secrets and versions automatically. It will
 also remove all but the latest secret each time an update occurs. This reduces
 the usage cost of Secret Manager substantially as projects are charged based
-partially on number of _active_ (ie not destroyed) secret versions.
+partially on number of _active_ and _disabled_ (ie not destroyed) secret
+versions.
+
+You can also use [`KeyUploader`](#keyuploader).
 
 ### Firestore
 
-Firestore requires no additional configuration.
+Firestore requires no additional configuration, although you will have to
+seed the Firestore database with the client secret data, much like with Secret
+Manager above. Unfortunately there is no CLI access through `gcloud` to
+Firestore so we can't write a simple shell script. In this case, please see
+below in the section on [`KeyUploader`](#keyuploader).
 
 ### Google Cloud Storage
 
@@ -90,6 +97,7 @@ To use Google Cloud Storage you must have a bucket created in which the user
 token files and project secrets are to be stored and to which the app's service
 account has read/write access. This should then be locked down so that no other
 non-administrators have access.
+
 
 ### Local files
 
@@ -157,3 +165,43 @@ manager = SecretManager(project='<gcp project name>')
 
 manager.list_documents()
 ```
+
+## [`KeyUploader`](#keyuploader)
+
+The Key Uploader (`key_upload.py`) is a way of inserting `json` files into your
+datastore from the command line. It will work for any key, and any of the
+supplied datastores. This will allow you to pre-load `Firestore` with the
+`client_secret` keys necessary, but can also be used for `CloudStorage`,
+`LocalFile` and `SecretManager` implementations simply by changing a switch.
+
+The file to be uploaded can be stored either locally or on
+`Google Cloud Storage`.
+
+For example: to run the `KeyUploader` and install the client secrets file into
+Firestore, you would do the following:
+
+```
+python auth.cli.key_upload.py         \
+  --key=client_secret                 \
+  --firestore                         \
+  --email=YOUR_EMAIL                  \
+  --file=PATH/TO/client_secrets.json
+  ```
+
+Your available command-line switches are:
+
+| Switch             |                | Description                                                                                  |
+| ------------------ | -------------- | -------------------------------------------------------------------------------------------- |
+| `--project`        | _optional_     | The Google Cloud project to use (if it is not your default)                                  |
+| `--email`          | _optional_     | Your email address. This will be placed in the document.                                     |
+| `--file`           | **_required_** | The file containing the json to be uploaded.                                                 |
+| `--key`            | **_required_** | The name of the key to install. This must be valid for your storage method.                  |
+| `--encode_key`     | _optional_     | Base64 encode the key. Do this for any user tokens, but **NOT** for the `client_secret` key. |
+| `--local`          | _optional_     | Create/write to a local file.                                                                |
+| `--firestore`      | _optional_     | Use Firestore.                                                                               |
+| `--secret_manager` | _optional_     | Use Secret Manager.                                                                          |
+| `--cloud_storage`  | _optional_     | Use Google Cloud Storage.                                                                    |
+| `--bucket`         | _optional_     | The bucket in GCS to store the data in.                                                      |
+
+**NOTE** _One and only one_ of `--local`, `--firestore`, `--cloud_storage`
+and `--secret_manager` must be specified

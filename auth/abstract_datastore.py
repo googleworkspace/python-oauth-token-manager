@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+from auth import decorators
 
 
 class AbstractDatastore(object):
@@ -29,7 +30,23 @@ class AbstractDatastore(object):
   All unimplemented functions raise a NotImplementedError() rather than
   simply 'pass'.
   """
-  def get_document(self, key: Optional[str]=None) -> Dict[str, Any]:
+  @decorators.lazy_property
+  def project(self) -> str:
+    return self._project
+
+  @project.setter
+  def project(self, project: str) -> None:
+    self._project = project
+
+  @decorators.lazy_property
+  def email(self) -> str:
+    return self._email
+
+  @email.setter
+  def email(self, email: str) -> None:
+    self._email = email
+
+  def get_document(self, key: Optional[str] = None) -> Dict[str, Any]:
     """Fetches a document (could be anything, 'type' identifies the root.)
 
     Fetch a document
@@ -48,9 +65,7 @@ class AbstractDatastore(object):
                      document: Dict[str, Any]) -> None:
     """Stores a document.
 
-    Store a document in Firestore. They're all stored by Type
-    (DCM/DBM/SA360/ADH) and each one within the type is keyed by the
-    appropriate report id.
+    Store a document in the datastore.
 
     Arguments:
         id (str): report id
@@ -61,7 +76,7 @@ class AbstractDatastore(object):
   def update_document(self, id: str, new_data: Dict[str, Any]) -> None:
     """Updates a document.
 
-    Update a document in Firestore. If the document is not already there, it
+    Update a document in the datastore. If the document is not already there, it
     will be created as a net-new document. If it is, it will be updated.
 
     Args:
@@ -70,10 +85,10 @@ class AbstractDatastore(object):
     """
     raise NotImplementedError('Must be implemented by child class.')
 
-  def delete_document(self, id: str, key: Optional[str]=None) -> None:
+  def delete_document(self, id: str, key: Optional[str] = None) -> None:
     """Deletes a document.
 
-    This removes a document or partial document from the Firestore. If a key is
+    This removes a document or partial document from the datastore. If a key is
     supplied, then just that key is removed from the document. If no key is
     given, the entire document will be removed from the collection.
 
@@ -83,15 +98,10 @@ class AbstractDatastore(object):
     """
     raise NotImplementedError('Must be implemented by child class.')
 
-  def list_documents(self, key: str=None) -> List[str]:
+  def list_documents(self, key: str = None) -> List[str]:
     """Lists documents in a collection.
 
-    List all the documents in the collection 'type'. If a key is give, list
-    all the sub-documents of that key. For example:
-
-    list_documents(Type.SA360_RPT) will show { '_reports', report_1, ... }
-    list_documents(Type.SA360_RPT, '_reports') will return
-      { 'holiday_2020', 'sa360_hourly_depleted', ...}
+    List all the documents.
 
     Args:
         key (str, optional): the sub-key. Defaults to None.
@@ -104,7 +114,7 @@ class AbstractDatastore(object):
   def get_all_documents(self) -> List[Dict[str, Any]]:
     """Fetches all documents
 
-    Fetches all documents of a given Type.
+    Fetches all documents.
 
     Returns:
         runners (List[Dict[str, Any]]): contents of all documents

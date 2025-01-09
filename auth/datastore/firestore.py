@@ -27,9 +27,21 @@ class Firestore(AbstractDatastore):
     """The datastore client."""
     return firestore.Client()
 
-  def __init__(self, email: str=None, project: str=None) -> AbstractDatastore:
-    self._project = project
-    self._email = email
+  @decorators.lazy_property
+  def collection(self) -> str:
+    return self._collection
+
+  @collection.setter
+  def collection(self, collection: str) -> None:
+    self._collection = collection
+
+  def __init__(self,
+               email: str = None,
+               project: str = None,
+               collection: str = 'administration') -> AbstractDatastore:
+    self.project = project
+    self.email = email
+    self.collection = collection
 
   def get_all_documents(self) -> List[firestore.DocumentReference]:
     """Lists all documents
@@ -39,11 +51,11 @@ class Firestore(AbstractDatastore):
     Returns:
         documents (List[DocumentReference]): list of all documents
     """
-    documents = self.client.collection(type.value).list_documents()
+    documents = self.client.collection(self.collection).list_documents()
     return documents
 
   def get_document(self, id: str,
-                   key: Optional[str]=None) -> Dict[str, Any]:
+                   key: Optional[str] = None) -> Dict[str, Any]:
     """Loads a document
 
     Load a document
@@ -58,25 +70,22 @@ class Firestore(AbstractDatastore):
     """
     document = None
 
-    if report := self.client.document(f'auth/{id}'):
-
+    if report := self.client.collection(self.collection().document(id)):
       document = report.get().to_dict()
 
     return document.get(key) if key and document else document
 
-  def store_document(self,id: str,
+  def store_document(self, id: str,
                      document: Dict[str, Any]) -> None:
     """Stores a document.
 
-    Store a document in Firestore. They're all stored by Type
-    (DCM/DBM/SA360/ADH) and each one within the type is keyed by the
-    appropriate report id.
+    Store a document in Firestore.
 
     Arguments:
         id (str): report id
         report_data (Dict[str, Any]): report configuration
     """
-    report = self.client.document(f'auth/{id}')
+    report = self.client.collection(self.collection).document(id)
     report.set(document)
 
   def update_document(self, id: str,
@@ -90,7 +99,7 @@ class Firestore(AbstractDatastore):
         id (str): the id of the document within the collection.
         new_data (Dict[str, Any]): the document content.
     """
-    if collection := self.client.collection(f'auth'):
+    if collection := self.client.collection(self.collection):
       if document_ref := collection.document(document_id=id):
         if document_ref.get().exists:
           document_ref.update(new_data)
@@ -98,34 +107,26 @@ class Firestore(AbstractDatastore):
           document_ref.create(new_data)
 
   def delete_document(self, id: str,
-                      key: Optional[str]=None) -> None:
+                      key: Optional[str] = None) -> None:
     """Deletes a document.
 
-    This removes a document or partial document from the Firestore. If a key is
+    This removes a document or partial document from the datastore. If a key is
     supplied, then just that key is removed from the document. If no key is
     given, the entire document will be removed from the collection.
 
     Args:
-        type (Type): the document type, which is the collection.
         id (str): the id of the document within the collection.
         key (str, optional): the key to remove. Defaults to None.
     """
-    if collection := self.client.collection('auth'):
+    if collection := self.client.collection(self.collection):
       if document_ref := collection.document(document_id=id):
         if key:
-          document_ref.update({ key: firestore.DELETE_FIELD })
+          document_ref.update({key: firestore.DELETE_FIELD})
         else:
           document_ref.delete()
 
-  def list_documents(self, key: str=None) -> List[str]:
+  def list_documents(self, key: str = None) -> List[str]:
     """Lists documents in a collection.
-
-    List all the documents in the collection 'type'. If a key is give, list
-    all the sub-documents of that key. For example:
-
-    list_documents(Type.SA360_RPT) will show { '_reports', report_1, ... }
-    list_documents(Type.SA360_RPT, '_reports') will return
-      { 'holiday_2020', 'sa360_hourly_depleted', ...}
 
     Args:
         key (str, optional): the sub-key. Defaults to None.
@@ -134,7 +135,7 @@ class Firestore(AbstractDatastore):
         List[str]: the list
     """
     documents = []
-    collection = self.client.collection('auth').list_documents()
+    collection = self.client.collection(self.collection).list_documents()
     for document in collection:
       if key:
         if document.id == key:
