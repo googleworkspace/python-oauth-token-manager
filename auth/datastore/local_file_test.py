@@ -14,13 +14,10 @@
 
 import json
 import unittest
+from copy import deepcopy
 from unittest import mock
 
 from auth import local_file
-from google.oauth2 import credentials as oauth
-
-from copy import deepcopy
-from typing import Any, Dict
 
 MASTER_CONFIG = {
     "auth": {

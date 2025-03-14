@@ -12,17 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import json
-import logging
-import os
 from contextlib import suppress
-from datetime import datetime
 
 import gcsfs
 from absl import app, flags
-from auth.credentials_helpers import encode_key
 
+from auth.credentials_helpers import encode_key
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('project', None, 'GCP Project.')

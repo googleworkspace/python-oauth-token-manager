@@ -21,7 +21,7 @@ Other storage locations can be added at will simply by extending the
 
 ## Initial Setup And Installation
 
-## Enable the APIs on Google Cloud
+### Enable the APIs on Google Cloud
 
 In order to use the connectors to any of the Google Cloud storage methods
 (Secret Manager, Firestore and Google Cloud Storage) you will have to ensure
@@ -29,7 +29,7 @@ that the relevant APIs have been enabled. Follow the instructions listed in the
 [developer documentation](https://cloud.google.com/apis/docs/getting-started)
 to enable the API you need.
 
-## Ensure the app's service account has acces to the APIs
+### Ensure the app's service account has access to the APIs
 
 ## Implementation specific
 
@@ -81,15 +81,12 @@ the usage cost of Secret Manager substantially as projects are charged based
 partially on number of _active_ and _disabled_ (ie not destroyed) secret
 versions.
 
-You can also use [`KeyUploader`](#keyuploader).
+You can also use [`KeyUploader`](#keyuploader) to upload these data.
 
 ### Firestore
 
-Firestore requires no additional configuration, although you will have to
-seed the Firestore database with the client secret data, much like with Secret
-Manager above. Unfortunately there is no CLI access through `gcloud` to
-Firestore so we can't write a simple shell script. In this case, please see
-below in the section on [`KeyUploader`](#keyuploader).
+Firestore requires no additional configuration, as it uses the service account's
+credentials to access the database.
 
 ### Google Cloud Storage
 
@@ -177,17 +174,6 @@ supplied datastores. This will allow you to pre-load `Firestore` with the
 The file to be uploaded can be stored either locally or on
 `Google Cloud Storage`.
 
-For example: to run the `KeyUploader` and install the client secrets file into
-Firestore, you would do the following:
-
-```
-python auth.cli.key_upload.py         \
-  --key=client_secret                 \
-  --firestore                         \
-  --email=YOUR_EMAIL                  \
-  --file=PATH/TO/client_secrets.json
-  ```
-
 Your available command-line switches are:
 
 | Switch             |                | Description                                                                                  |
@@ -205,3 +191,19 @@ Your available command-line switches are:
 
 **NOTE** _One and only one_ of `--local`, `--firestore`, `--cloud_storage`
 and `--secret_manager` must be specified
+
+For example: to run the `KeyUploader` and install the client secrets file into
+Firestore, you would do the following:
+
+```
+python -m auth.cli.key_upload         \
+  --key=client_secret                 \
+  --firestore                         \
+  --email=YOUR_EMAIL                  \
+  --file=PATH/TO/client_secrets.json
+  ```
+
+This will create a collection called '`administration`', and add a document
+to it called '`client_secret`', with keys corresponding to the entire content
+of the json file.
+

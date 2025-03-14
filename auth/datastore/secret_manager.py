@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
-from io import BytesIO
 
 import json
 from typing import Any, List, Mapping, Optional, Type
 
 from google.cloud import secretmanager, secretmanager_v1
 from google.cloud.secretmanager_v1.types import resources
-from google.cloud.secretmanager_v1.services.secret_manager_service import pagers
 
 from auth import decorators
 from auth.abstract_datastore import AbstractDatastore
@@ -104,12 +102,10 @@ class SecretManager(AbstractDatastore):
     new_version: resources.SecretVersion = self.store_document(
         id=id, type=type, document=new_data)
 
-    latest = self._get_latest(id)
-
     # Destroy all versions other than the latest for cost reasons..
     request = secretmanager_v1.ListSecretVersionsRequest(
         parent=self.client.secret_path(project=self._project, secret=id),
-        filter=f'state:enabled'  # AND name!="{latest.name}"'
+        filter='state:enabled'
     )
     version_list = self.client.list_secret_versions(request=request)
     for page in version_list.pages:

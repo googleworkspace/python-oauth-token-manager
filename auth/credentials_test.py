@@ -16,11 +16,12 @@ import json
 import unittest
 from unittest import mock
 
+from google.oauth2 import credentials as oauth
+
+from auth import local_file
+from auth.credentials import Credentials
 from auth.credentials_helpers import encode_key
 from auth.exceptions import KeyEncodingError
-from google.oauth2 import credentials as oauth
-from auth.credentials import Credentials
-from auth import local_file
 
 MASTER_CONFIG = {
     "auth": {
@@ -40,17 +41,21 @@ class CredentialsTest(unittest.TestCase):
   def setUp(self):
     self.open = mock.mock_open(read_data=json.dumps(MASTER_CONFIG))
 
-  # def test_encode_valid(self) -> None:
-  #   self.assertEqual('YnV0dGVyY3VwQGFzeW91d2lzaC5jb20',
-  #                    encode_key('buttercup@asyouwish.com'))
+  def test_encode_valid(self) -> None:
+    self.assertEqual('YnV0dGVyY3VwQGFzeW91d2lzaC5jb20',
+                     encode_key('buttercup@asyouwish.com'))
 
-  # def test_encode_none(self) -> None:
-  #   with self.assertRaisesRegex(KeyEncodingError, 'Cannot encode None'):
-  #     encode_key(None)
+  def test_encode_none(self) -> None:
+    with self.assertRaisesRegex(KeyEncodingError, 'Cannot encode None'):
+      encode_key(None)
 
   def test_store_credentials_with_creds(self) -> None:
     token = {"token": "token",
-             "refresh_token": "refresh_token", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "client_id", "client_secret": "client_secret", "expiry": "2023-10-12T19:30:11.273524Z"}
+             "refresh_token": "refresh_token",
+             "token_uri": "https://oauth2.googleapis.com/token",
+             "client_id": "client_id",
+             "client_secret": "client_secret",
+             "expiry": "2023-10-12T19:30:11.273524Z"}
     creds = oauth.Credentials.from_authorized_user_info(token)
 
     c = Credentials(datastore=local_file.LocalFile,

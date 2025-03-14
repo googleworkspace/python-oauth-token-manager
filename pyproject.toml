@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-oauth-token-manager"
-version = "1.0.2"
+version = "1.1.0"
 authors = [{ name = "David Harcombe", email = "david.harcombe@gmail.com" }]
 description = "API for managing stored OAuth credentials."
 readme = "README.md"
