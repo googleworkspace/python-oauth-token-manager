@@ -51,7 +51,11 @@ class CredentialsTest(unittest.TestCase):
 
   def test_store_credentials_with_creds(self) -> None:
     token = {"token": "token",
-             "refresh_token": "refresh_token", "token_uri": "https://oauth2.googleapis.com/token", "client_id": "client_id", "client_secret": "client_secret", "expiry": "2023-10-12T19:30:11.273524Z"}
+             "refresh_token": "refresh_token",
+             "token_uri": "https://oauth2.googleapis.com/token",
+             "client_id": "client_id",
+             "client_secret": "client_secret",
+             "expiry": "2023-10-12T19:30:11.273524Z"}
     creds = oauth.Credentials.from_authorized_user_info(token)
 
     c = Credentials(datastore=local_file.LocalFile,
