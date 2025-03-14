@@ -14,12 +14,10 @@
 
 import json
 import unittest
+from copy import deepcopy
 from unittest import mock
 
 from auth.datastore import cloud_storage
-
-from copy import deepcopy
-from typing import Any, Dict
 
 MASTER_CONFIG = {
     "auth": {

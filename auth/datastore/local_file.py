@@ -14,9 +14,11 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Dict, List, Mapping, Optional
+from typing import Any, Dict
 
 from auth import decorators
+from auth.abstract_datastore import AbstractDatastore
+
 from .file_datastore import FileDatastore
 
 

@@ -13,11 +13,10 @@
 # limitations under the License.
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
-import json
 from typing import Any, Dict, Mapping, Type, TypeVar, Union
-from io import BytesIO
 
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -25,7 +24,6 @@ from google.auth.transport import requests
 from google.oauth2 import credentials as oauth
 
 from auth import decorators
-
 from auth.abstract_datastore import AbstractDatastore
 from auth.credentials_helpers import encode_key
 from auth.exceptions import CredentialsError
@@ -126,10 +124,9 @@ class Credentials(object):
           client_secret.get('web') or \
           client_secret.get('installed')
 
-    creds = \
-        ProjectCredentials(client_id=secrets['client_id'],
-                           client_secret=secrets['client_secret']) \
-        if secrets else None
+    creds = ProjectCredentials(client_id=secrets['client_id'],
+                               client_secret=secrets['client_secret']
+                               ) if secrets else None
 
     return creds
 
@@ -177,8 +174,7 @@ class Credentials(object):
     Returns:
         datetime: the date in UTC
     """
-    if (last_date.tzinfo is None or
-            last_date.tzinfo.utcoffset(last_date) is None):
+    if (last_date.tzinfo is None or last_date.tzinfo.utcoffset(last_date) is None):
       last_date = pytz.UTC.localize(last_date)
 
     return last_date

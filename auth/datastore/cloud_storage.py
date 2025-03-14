@@ -14,11 +14,12 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Dict, List, Mapping, Optional
+from typing import Any, Dict
 
 import gcsfs
 from auth import decorators
 from .file_datastore import FileDatastore
+from auth.abstract_datastore import AbstractDatastore
 
 
 class CloudStorage(FileDatastore):
@@ -29,7 +30,7 @@ class CloudStorage(FileDatastore):
     try:
       fs = gcsfs.GCSFileSystem(project=self.project)
       file_name = f'{self.bucket}/{self.datastore_file}'
-      with open(file_name, 'r') as store:
+      with fs.open(file_name, 'r') as store:
         if data := store.read():
           return json.loads(data)
         else:
