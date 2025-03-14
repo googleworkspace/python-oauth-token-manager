@@ -14,14 +14,13 @@
 
 import json
 import unittest
+from copy import deepcopy
 from unittest import mock
 
-from auth import local_datastore
+import key_upload
 from classes.report_type import Type
-from cli import key_upload
 
-from copy import deepcopy
-from typing import Any, Callable, Dict, Mapping
+from auth import local_datastore
 
 CLASS_UNDER_TEST = 'cli.key_upload'
 
@@ -70,4 +69,3 @@ class KeyUploadTest(unittest.TestCase):
 
         mock_method.assert_called_with(type=Type._ADMIN, id='a2V5',
                                        new_data=expected)
-
