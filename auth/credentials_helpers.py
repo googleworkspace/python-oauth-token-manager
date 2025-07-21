@@ -35,5 +35,5 @@ def encode_key(key: str) -> str:
             key.encode('utf-8')).decode('utf-8').rstrip('='):
       return encoded_key
 
-  except KeyEncodingError:
+  except AttributeError:
     raise KeyEncodingError(f'Cannot encode {key}.')

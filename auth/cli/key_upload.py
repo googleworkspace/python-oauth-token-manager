@@ -12,13 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 from contextlib import suppress
 
-import gcsfs
 from absl import app, flags
-
-from auth.credentials_helpers import encode_key
+from key_uploader import KeyUpload
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('project', None, 'GCP Project.')
@@ -36,58 +33,8 @@ flags.mark_bool_flags_as_mutual_exclusive(
     ['local', 'firestore', 'secret_manager', 'cloud_storage'], required=True)
 
 
-def upload(**args) -> None:
-  """Uploads data to firestore.
-
-  Args:
-      key (str): the data key.
-      file (str): the file containing the data.
-      encode_key (bool): should the key be encoded (eg is it an email).
-      local_store (bool): local storage (True) or Firestore (False).
-  """
-  _project = args.get('project')
-  _key = args.get('key')
-
-  if file := args.get('file'):
-    if file.startswith('gs://'):
-      with gcsfs.GCSFileSystem(project=_project).open(file, 'r') as data_file:
-        src_data = json.loads(data_file.read())
-    else:
-      # Assume locally stored token file
-      with open(file, 'r') as data_file:
-        src_data = json.loads(data_file.read())
-
-  if args.get('encode_key'):
-    key = encode_key(_key)
-
-  else:
-    key = _key
-
-  src_data['email'] = _key
-
-  if args.get('local_store'):
-    from auth.datastore.local_datastore import LocalDatastore
-    f = LocalDatastore()
-
-  if args.get('firestore'):
-    from auth.datastore.firestore import Firestore
-    f = Firestore()
-
-  if args.get('secret_manager'):
-    from auth.datastore.secret_manager import SecretManager
-    f = SecretManager(project=_project, email=args.get('email'))
-
-  if args.get('cloud_storage'):
-    from auth.datastore.cloud_storage import CloudStorage
-    f = CloudStorage(project=_project,
-                     email=args.get('email'),
-                     bucket=args.get('bucket'))
-
-  f.update_document(id=key, new_data=src_data)
-
-
 def main(unused_argv):
-  upload(**FLAGS.flag_values_dict())
+  KeyUpload().upload(**FLAGS.flag_values_dict())
 
 
 if __name__ == '__main__':

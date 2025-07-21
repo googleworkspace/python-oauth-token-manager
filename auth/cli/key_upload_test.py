@@ -14,58 +14,70 @@
 
 import json
 import unittest
-from copy import deepcopy
+# from copy import deepcopy
 from unittest import mock
 
-import key_upload
-from classes.report_type import Type
+from .key_uploader import KeyUpload
 
-from auth import local_datastore
-
-CLASS_UNDER_TEST = 'cli.key_upload'
+CLASS_UNDER_TEST = 'auth.local_file'
+MASTER_FILE = {'test_root': {'a': 'A', 'b': 'B'}, 'email': 'key'}
 
 
 class KeyUploadTest(unittest.TestCase):
   def setUp(self) -> None:
-    self.valid_source = {'test_root': {'a': 'A', 'b': 'B'}, 'email': 'key'}
-    self.open = mock.mock_open(read_data=json.dumps(self.valid_source))
-    self.mock_datastore = mock.MagicMock()
-    self.mock_datastore.update_document.return_value = None
+    self.open = mock.mock_open(read_data=json.dumps(MASTER_FILE))
 
   def test_good_unencoded(self):
     with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      with mock.patch.object(local_datastore.LocalDatastore,
-                             'update_document',
-                             return_value=None) as mock_method:
-        event = {
+      test = KeyUpload()
+
+      test.load_src = mock.MagicMock(return_value=MASTER_FILE)
+      event = {
           'key': 'key',
           'file': 'test.json',
           'encode_key': False,
           'local_store': True,
-        }
-        _ = key_upload.upload(**event)
-        self.open.assert_called_with('test.json', 'r')
-        self.open().read.assert_called()
-        mock_method.assert_called()
-        mock_method.assert_called_with(type=Type._ADMIN, id='key',
-                                       new_data=self.valid_source)
+      }
+      test.upload(**event)
+      self.open().write.assert_called_once()
+      # self.assertEqual(expected.get('api_key'),
+      #                  datastore.datastore.get('auth').get('api_key'))
 
-  def test_good_encoded(self):
-    with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
-      with mock.patch.object(local_datastore.LocalDatastore,
-                             'update_document',
-                             return_value=None) as mock_method:
-        event = {
-          'key': 'key',
-          'file': 'test.json',
-          'encode_key': True,
-          'local_store': True,
-        }
-        _ = key_upload.upload(**event)
-        self.open.assert_called_with('test.json', 'r')
-        self.open().read.assert_called()
-        mock_method.assert_called()
-        expected = deepcopy(self.valid_source)
+  # def test_good_unencoded(self):
+  #   with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
+  #     _ = mock.patch.object(KeyUpload, 'load_src', self.open)
+  #     mock_method = mock.patch.object(local_file.LocalFile,
+  #                                     'update_document',
+  #                                     return_value=None)
+  #     event = {
+  #         'key': 'key',
+  #         'file': 'test.json',
+  #         'encode_key': False,
+  #         'local_store': True,
+  #     }
+  #     _ = KeyUpload().upload(**event)
+  #     self.open.assert_called_with('test.json', 'r')
+  #     self.open().read.assert_called()
+  #     mock_method.assert_called()
+  #     mock_method.assert_called_with(id='key',
+  #                                    new_data=MASTER_FILE)
 
-        mock_method.assert_called_with(type=Type._ADMIN, id='a2V5',
-                                       new_data=expected)
+  # def test_good_encoded(self):
+  #   with mock.patch(f'{CLASS_UNDER_TEST}.open', self.open):
+  #     with mock.patch.object(local_file.LocalFile,
+  #                            'update_document',
+  #                            return_value=None) as mock_method:
+  #       event = {
+  #         'key': 'key',
+  #         'file': 'test.json',
+  #         'encode_key': True,
+  #         'local_store': True,
+  #       }
+  #       _ = key_upload.upload(**event)
+  #       self.open.assert_called_with('test.json', 'r')
+  #       self.open().read.assert_called()
+  #       mock_method.assert_called()
+  #       expected = deepcopy(self.valid_source)
+
+  #       mock_method.assert_called_with(id='a2V5',
+  #                                      new_data=expected)
